@@ -283,27 +283,35 @@ function SalesContent() {
                 <div className="flex">
                   {/* Thumbnail */}
                   <div className="relative h-28 w-28 flex-shrink-0 bg-[#E5E5E5] sm:h-40 sm:w-40 md:h-48 md:w-48">
-                    <div className="flex h-full w-full items-center justify-center text-[#B8A88A]">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className="h-8 w-8 sm:h-12 sm:w-12"
-                      >
-                        <rect
-                          width="18"
-                          height="18"
-                          x="3"
-                          y="3"
-                          rx="2"
-                          ry="2"
-                        />
-                        <circle cx="9" cy="9" r="2" />
-                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                      </svg>
-                    </div>
+                    {sale.photos && sale.photos.length > 0 ? (
+                      <img
+                        src={sale.photos[0]}
+                        alt={sale.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[#B8A88A]">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          className="h-8 w-8 sm:h-12 sm:w-12"
+                        >
+                          <rect
+                            width="18"
+                            height="18"
+                            x="3"
+                            y="3"
+                            rx="2"
+                            ry="2"
+                          />
+                          <circle cx="9" cy="9" r="2" />
+                          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}
