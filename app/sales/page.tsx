@@ -57,16 +57,18 @@ function formatDateRange(startDate: string, endDate: string): string {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  const startMonth = start.toLocaleDateString("en-US", { month: "short" });
-  const startDay = start.getDate();
-  const endDay = end.getDate();
+  const startDay = start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const endDay = end.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
-  if (start.getMonth() === end.getMonth()) {
-    return `${startMonth} ${startDay}-${endDay}`;
-  }
+  return `${startDay} — ${endDay}`;
+}
 
-  const endMonth = end.toLocaleDateString("en-US", { month: "short" });
-  return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+function formatTime(time: string): string {
+  const [hours, minutes] = time.split(":");
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
 }
 
 function SalesContent() {
@@ -267,78 +269,92 @@ function SalesContent() {
               </p>
             </div>
           ) : (
-          <div className="space-y-3 sm:space-y-4">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-1">
             {sales.map((sale) => (
               <Link
                 key={sale.id}
                 href={`/sales/${sale.id}`}
-                className={`block border bg-white transition-all hover:shadow-md ${
+                className={`block border bg-white transition-all hover:shadow-lg ${
                   selectedSaleId === sale.id
-                    ? "border-[#2D3B2D] shadow-md"
+                    ? "border-[#2D3B2D] shadow-lg"
                     : "border-[#E5E5E5]"
                 }`}
                 onMouseEnter={() => setSelectedSaleId(sale.id)}
                 onMouseLeave={() => setSelectedSaleId(null)}
               >
-                <div className="flex">
-                  {/* Thumbnail */}
-                  <div className="relative h-28 w-28 flex-shrink-0 bg-[#E5E5E5] sm:h-40 sm:w-40 md:h-48 md:w-48">
-                    {sale.photos && sale.photos.length > 0 ? (
-                      <img
-                        src={sale.photos[0]}
-                        alt={sale.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[#B8A88A]">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          className="h-8 w-8 sm:h-12 sm:w-12"
-                        >
-                          <rect
-                            width="18"
-                            height="18"
-                            x="3"
-                            y="3"
-                            rx="2"
-                            ry="2"
-                          />
-                          <circle cx="9" cy="9" r="2" />
-                          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                        </svg>
+                {/* Image */}
+                <div className="relative aspect-[16/9] w-full bg-[#E5E5E5]">
+                  {sale.photos && sale.photos.length > 0 ? (
+                    <img
+                      src={sale.photos[0]}
+                      alt={sale.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-[#B8A88A]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        className="h-12 w-12"
+                      >
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                        <circle cx="9" cy="9" r="2" />
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                      </svg>
+                    </div>
+                  )}
+                  {sale.is_featured && (
+                    <div className="absolute top-3 left-3 bg-[#B8A88A] px-2 py-1 text-xs font-medium uppercase tracking-wide text-white">
+                      Featured
+                    </div>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-4 sm:p-5">
+                  <h2 className="font-serif text-lg font-bold uppercase tracking-wide text-[#2D3B2D] sm:text-xl">
+                    {sale.title}
+                  </h2>
+
+                  <div className="mt-4 space-y-3">
+                    {/* Date & Time */}
+                    <div className="flex items-start gap-3">
+                      <CalendarIcon />
+                      <div>
+                        <p className="font-medium text-[#2D3B2D]">
+                          {formatDateRange(sale.start_date, sale.end_date)}
+                        </p>
+                        {sale.start_time && sale.end_time && (
+                          <p className="text-sm text-[#6B7280]">
+                            {formatTime(sale.start_time)} - {formatTime(sale.end_time)} daily
+                          </p>
+                        )}
                       </div>
-                    )}
+                    </div>
+
+                    {/* Location */}
+                    <div className="flex items-start gap-3">
+                      <MapPinIcon />
+                      <div>
+                        <p className="font-medium text-[#2D3B2D]">{sale.address}</p>
+                        <p className="text-sm text-[#6B7280]">
+                          {sale.city}, {sale.state} {sale.zip_code}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
-                    <div>
-                      <h2 className="font-serif text-base leading-tight text-[#2D3B2D] line-clamp-2 sm:text-lg">
-                        {sale.title}
-                      </h2>
-                      <p className="mt-1 text-xs text-[#6B7280] sm:text-sm">
-                        {sale.company_name}
-                      </p>
-                    </div>
-
-                    <div className="mt-2 space-y-1 sm:mt-3 sm:space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-xs text-[#6B7280] sm:gap-2 sm:text-sm">
-                        <MapPinIcon />
-                        <span>
-                          {sale.city}, {sale.state}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-[#6B7280] sm:gap-2 sm:text-sm">
-                        <CalendarIcon />
-                        <span>
-                          {formatDateRange(sale.start_date, sale.end_date)}
-                        </span>
-                      </div>
-                    </div>
+                  {/* Hosted By */}
+                  <div className="mt-4 border-t border-[#E5E5E5] pt-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
+                      Hosted by
+                    </p>
+                    <p className="mt-1 font-medium text-[#2D3B2D]">
+                      {sale.company_name}
+                    </p>
                   </div>
                 </div>
               </Link>
