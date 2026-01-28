@@ -39,6 +39,11 @@
 | `/list/private` | Create sale listing (private seller) | Working |
 | `/list/success` | Listing success confirmation | Working |
 | `/dashboard` | Company dashboard | Working |
+| `/dashboard/company` | Edit company profile | Working |
+| `/dashboard/sales/[id]/edit` | Edit company sale | Working |
+| `/admin` | Super admin dashboard | Working |
+| `/admin/create` | Admin create any sale | Working |
+| `/admin/edit/[id]` | Admin edit any sale | Working |
 | `/auth/callback` | OAuth callback handler | Working |
 
 ## Backend Logic
@@ -107,7 +112,7 @@
 
 - [ ] **Email notifications** - No email system for sale alerts
 - [ ] **User reviews/ratings** - No review system for companies
-- [ ] **Admin dashboard** - No admin interface
+- [x] **Admin dashboard** - Super admin can create/edit/delete any sale at `/admin`
 - [ ] **Analytics tracking** - No usage analytics
 - [ ] **Payment/promoted listings** - No monetization features
 
@@ -173,6 +178,8 @@ Before troubleshooting, try these steps IN ORDER:
 
 ## Recently Completed
 
+- **2026-01-27**: Super admin dashboard (`/admin`) - create/edit/delete any sale, toggle featured/published
+- **2026-01-27**: Deployed to Vercel with GitHub auto-deploy integration
 - **2025-01-26**: "Search this area" button on map - pan/zoom map and search for sales in new visible area
 - **2025-01-26**: Map centering based on search query (geocodes searched location instead of hardcoded Austin)
 - **2025-01-26**: Location autocomplete search on homepage and /sales page using Google Places API

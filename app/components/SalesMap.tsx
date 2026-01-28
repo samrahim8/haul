@@ -19,6 +19,10 @@ interface Sale {
   lng?: number;
 }
 
+interface SaleWithCoords extends Sale {
+  coords?: { lat: number; lng: number };
+}
+
 export interface MapBounds {
   north: number;
   south: number;
@@ -34,31 +38,6 @@ interface SalesMapProps {
   onBoundsChange?: (bounds: MapBounds) => void;
   onSearchArea?: (bounds: MapBounds) => void;
   showSearchButton?: boolean;
-}
-
-// Hardcoded coordinates for Texas cities (fallback for demo)
-const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-  "Austin, TX": { lat: 30.2672, lng: -97.7431 },
-  "Round Rock, TX": { lat: 30.5083, lng: -97.6789 },
-  "Cedar Park, TX": { lat: 30.5052, lng: -97.8203 },
-  "Georgetown, TX": { lat: 30.6333, lng: -97.6778 },
-  "Pflugerville, TX": { lat: 30.4394, lng: -97.62 },
-};
-
-// Generate approximate coords based on city + random offset for demo
-function getApproxCoords(sale: Sale): { lat: number; lng: number } {
-  const cityKey = `${sale.city}, ${sale.state}`;
-  const baseCoords = CITY_COORDS[cityKey] || { lat: 30.2672, lng: -97.7431 };
-
-  // Add small random offset based on sale id to spread markers
-  const hash = sale.id.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
-  const latOffset = ((hash % 100) - 50) * 0.002;
-  const lngOffset = (((hash * 7) % 100) - 50) * 0.002;
-
-  return {
-    lat: baseCoords.lat + latOffset,
-    lng: baseCoords.lng + lngOffset,
-  };
 }
 
 function formatDateRange(startDate: string, endDate: string): string {
@@ -84,12 +63,90 @@ function SalesMapInner({
   showSearchButton = true,
 }: SalesMapProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [infoWindowSale, setInfoWindowSale] = useState<Sale | null>(null);
+  const [infoWindowSale, setInfoWindowSale] = useState<SaleWithCoords | null>(null);
   const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null);
   const [showSearchAreaButton, setShowSearchAreaButton] = useState(false);
   const initialBoundsSet = useRef(false);
+  const [salesWithCoords, setSalesWithCoords] = useState<SaleWithCoords[]>([]);
+  const geocodedIds = useRef<Set<string>>(new Set());
 
   const defaultCenter = center || { lat: 30.2672, lng: -97.7431 }; // Austin, TX
+
+  // Geocode all sales when they load
+  useEffect(() => {
+    if (!sales.length) {
+      setSalesWithCoords([]);
+      return;
+    }
+
+    // Check if Google Maps is ready
+    if (typeof google === "undefined" || !google.maps) {
+      // Set sales without coords initially, geocode later
+      setSalesWithCoords(sales.map(s => ({ ...s })));
+      return;
+    }
+
+    const geocoder = new google.maps.Geocoder();
+    const updatedSales: SaleWithCoords[] = [...sales.map(s => ({ ...s }))];
+    let pendingCount = 0;
+
+    sales.forEach((sale, index) => {
+      // Skip if already geocoded
+      if (geocodedIds.current.has(sale.id)) {
+        const existing = salesWithCoords.find(s => s.id === sale.id);
+        if (existing?.coords) {
+          updatedSales[index].coords = existing.coords;
+        }
+        return;
+      }
+
+      // Skip if sale already has lat/lng
+      if (sale.lat && sale.lng) {
+        updatedSales[index].coords = { lat: sale.lat, lng: sale.lng };
+        geocodedIds.current.add(sale.id);
+        return;
+      }
+
+      pendingCount++;
+      const address = `${sale.address}, ${sale.city}, ${sale.state} ${sale.zip_code}`;
+
+      // Delay geocoding requests to avoid rate limiting
+      setTimeout(() => {
+        geocoder.geocode({ address }, (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            const location = results[0].geometry.location;
+            updatedSales[index].coords = {
+              lat: location.lat(),
+              lng: location.lng(),
+            };
+            geocodedIds.current.add(sale.id);
+          } else {
+            // Fallback: use city center
+            geocoder.geocode({ address: `${sale.city}, ${sale.state}` }, (cityResults, cityStatus) => {
+              if (cityStatus === "OK" && cityResults && cityResults[0]) {
+                const loc = cityResults[0].geometry.location;
+                // Add small offset based on sale ID to spread markers
+                const hash = sale.id.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
+                const latOffset = ((hash % 100) - 50) * 0.001;
+                const lngOffset = (((hash * 7) % 100) - 50) * 0.001;
+                updatedSales[index].coords = {
+                  lat: loc.lat() + latOffset,
+                  lng: loc.lng() + lngOffset,
+                };
+                geocodedIds.current.add(sale.id);
+              }
+              setSalesWithCoords([...updatedSales]);
+            });
+            return;
+          }
+          setSalesWithCoords([...updatedSales]);
+        });
+      }, index * 100); // Stagger requests by 100ms
+    });
+
+    // Set initial state immediately
+    setSalesWithCoords(updatedSales);
+  }, [sales]);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
@@ -135,25 +192,21 @@ function SalesMapInner({
   // Pan to selected sale when it changes
   useEffect(() => {
     if (selectedSaleId && mapRef.current) {
-      const sale = sales.find((s) => s.id === selectedSaleId);
-      if (sale) {
-        const coords = sale.lat && sale.lng
-          ? { lat: sale.lat, lng: sale.lng }
-          : getApproxCoords(sale);
-        mapRef.current.panTo(coords);
+      const sale = salesWithCoords.find((s) => s.id === selectedSaleId);
+      if (sale && sale.coords) {
+        mapRef.current.panTo(sale.coords);
         setInfoWindowSale(sale);
       }
     }
-  }, [selectedSaleId, sales]);
+  }, [selectedSaleId, salesWithCoords]);
 
-  const handleMarkerClick = (sale: Sale) => {
+  const handleMarkerClick = (sale: SaleWithCoords) => {
     setInfoWindowSale(sale);
     onSaleSelect?.(sale.id);
 
-    const coords = sale.lat && sale.lng
-      ? { lat: sale.lat, lng: sale.lng }
-      : getApproxCoords(sale);
-    mapRef.current?.panTo(coords);
+    if (sale.coords) {
+      mapRef.current?.panTo(sale.coords);
+    }
   };
 
   return (
@@ -179,17 +232,16 @@ function SalesMapInner({
           onSaleSelect?.(null);
         }}
       >
-      {sales.map((sale) => {
-        const coords = sale.lat && sale.lng
-          ? { lat: sale.lat, lng: sale.lng }
-          : getApproxCoords(sale);
+      {salesWithCoords.map((sale) => {
+        // Only render marker if we have coordinates
+        if (!sale.coords) return null;
 
         const isSelected = selectedSaleId === sale.id;
 
         return (
           <Marker
             key={sale.id}
-            position={coords}
+            position={sale.coords}
             onClick={() => handleMarkerClick(sale)}
             icon={{
               path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
@@ -205,13 +257,9 @@ function SalesMapInner({
         );
       })}
 
-      {infoWindowSale && (
+      {infoWindowSale && infoWindowSale.coords && (
         <InfoWindow
-          position={
-            infoWindowSale.lat && infoWindowSale.lng
-              ? { lat: infoWindowSale.lat, lng: infoWindowSale.lng }
-              : getApproxCoords(infoWindowSale)
-          }
+          position={infoWindowSale.coords}
           onCloseClick={() => {
             setInfoWindowSale(null);
             onSaleSelect?.(null);
