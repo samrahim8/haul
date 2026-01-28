@@ -277,24 +277,24 @@ export default function SaleDetailPage() {
                 <>
                   <button
                     onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? photoCount - 1 : prev - 1))}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 p-2 text-white hover:bg-black/80 lg:left-4"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 p-3 text-white active:bg-black/80 lg:left-4 lg:p-2 lg:hover:bg-black/80"
                     aria-label="Previous photo"
                   >
                     <ArrowLeftIcon />
                   </button>
                   <button
                     onClick={() => setCurrentImageIndex((prev) => (prev === photoCount - 1 ? 0 : prev + 1))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rotate-180 bg-black/60 p-2 text-white hover:bg-black/80 lg:right-4"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rotate-180 bg-black/60 p-3 text-white active:bg-black/80 lg:right-4 lg:p-2 lg:hover:bg-black/80"
                     aria-label="Next photo"
                   >
                     <ArrowLeftIcon />
                   </button>
-                  <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 lg:bottom-4">
+                  <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2 lg:bottom-4 lg:gap-1.5">
                     {sale.photos.map((_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`h-2 w-2 rounded-full transition-colors ${
+                        className={`h-2.5 w-2.5 rounded-full transition-colors lg:h-2 lg:w-2 ${
                           index === currentImageIndex
                             ? "bg-white"
                             : "bg-white/50"
@@ -340,14 +340,14 @@ export default function SaleDetailPage() {
               <div className="mt-5 flex gap-2">
                 <button
                   onClick={() => setMapModalOpen(true)}
-                  className="flex-1 bg-[#2D3B2D] py-3 text-center text-sm font-semibold uppercase tracking-wide text-white"
+                  className="flex-1 bg-[#2D3B2D] py-3.5 text-center text-sm font-semibold uppercase tracking-wide text-white active:opacity-90"
                 >
                   View on Map
                 </button>
-                <button className="flex h-[46px] w-[46px] items-center justify-center border border-[#E5E5E5] bg-white text-[#6B7280]">
+                <button className="flex h-12 w-12 items-center justify-center border border-[#E5E5E5] bg-white text-[#6B7280] active:bg-gray-50">
                   <HeartIcon />
                 </button>
-                <button className="flex h-[46px] w-[46px] items-center justify-center border border-[#E5E5E5] bg-white text-[#6B7280]">
+                <button className="flex h-12 w-12 items-center justify-center border border-[#E5E5E5] bg-white text-[#6B7280] active:bg-gray-50">
                   <ShareIcon />
                 </button>
               </div>

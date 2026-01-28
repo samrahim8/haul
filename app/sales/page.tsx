@@ -25,7 +25,7 @@ function CalendarIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-4 w-4 text-[#B8A88A]"
+      className="h-3.5 w-3.5 flex-shrink-0 text-[#B8A88A] sm:h-4 sm:w-4"
     >
       <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
       <line x1="16" x2="16" y1="2" y2="6" />
@@ -45,7 +45,7 @@ function MapPinIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-4 w-4 text-[#B8A88A]"
+      className="h-3.5 w-3.5 flex-shrink-0 text-[#B8A88A] sm:h-4 sm:w-4"
     >
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
       <circle cx="12" cy="10" r="3" />
@@ -71,6 +71,47 @@ function formatTime(time: string): string {
   return `${hour12}:${minutes} ${ampm}`;
 }
 
+function MapIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+      <line x1="9" x2="9" y1="3" y2="18" />
+      <line x1="15" x2="15" y1="6" y2="21" />
+    </svg>
+  );
+}
+
+function ListIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <line x1="8" x2="21" y1="6" y2="6" />
+      <line x1="8" x2="21" y1="12" y2="12" />
+      <line x1="8" x2="21" y1="18" y2="18" />
+      <line x1="3" x2="3.01" y1="6" y2="6" />
+      <line x1="3" x2="3.01" y1="12" y2="12" />
+      <line x1="3" x2="3.01" y1="18" y2="18" />
+    </svg>
+  );
+}
+
 function SalesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -80,6 +121,7 @@ function SalesContent() {
   const [sales, setSales] = useState<SaleWithCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [showMobileMap, setShowMobileMap] = useState(false);
 
   useEffect(() => {
     setSearchQuery(queryParam);
@@ -248,16 +290,40 @@ function SalesContent() {
 
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row">
+        {/* Mobile Map View */}
+        {showMobileMap && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="h-full w-full">
+              <SalesMap
+                sales={sales}
+                selectedSaleId={selectedSaleId}
+                onSaleSelect={setSelectedSaleId}
+                center={mapCenter || undefined}
+                onSearchArea={handleSearchArea}
+                showSearchButton={true}
+              />
+            </div>
+            {/* Back to List Button */}
+            <button
+              onClick={() => setShowMobileMap(false)}
+              className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white px-4 py-2.5 shadow-lg border border-[#E5E5E5] text-sm font-medium text-[#2D3B2D]"
+            >
+              <ListIcon />
+              List View
+            </button>
+          </div>
+        )}
+
         {/* Sales List */}
-        <div className="flex-1 px-4 py-4 sm:px-6 sm:py-6 md:px-12 lg:px-12 lg:py-8">
-          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="font-serif text-xl font-bold text-[#2D3B2D] sm:text-2xl">
-              {sales.length} {sales.length === 1 ? "Sale" : "Sales"} near {displayLocation}
+        <div className={`flex-1 px-4 py-4 sm:px-6 sm:py-6 md:px-12 lg:px-12 lg:py-8 ${showMobileMap ? 'hidden lg:block' : ''}`}>
+          <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
+            <h1 className="font-serif text-lg font-bold text-[#2D3B2D] sm:text-2xl">
+              {sales.length} {sales.length === 1 ? "Sale" : "Sales"} <span className="hidden sm:inline">near {displayLocation}</span>
             </h1>
-            <select className="w-full border border-[#E5E5E5] bg-white px-3 py-2 text-sm text-[#2D3B2D] focus:border-[#2D3B2D] focus:outline-none sm:w-auto">
-              <option>Sort by: Date</option>
-              <option>Sort by: Distance</option>
-              <option>Sort by: Newest</option>
+            <select className="border border-[#E5E5E5] bg-white px-2 py-1.5 text-xs text-[#2D3B2D] focus:border-[#2D3B2D] focus:outline-none sm:px-3 sm:py-2 sm:text-sm">
+              <option>Date</option>
+              <option>Distance</option>
+              <option>Newest</option>
             </select>
           </div>
 
@@ -269,12 +335,12 @@ function SalesContent() {
               </p>
             </div>
           ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 pb-20 sm:space-y-4 lg:pb-0">
             {sales.map((sale) => (
               <Link
                 key={sale.id}
                 href={`/sales/${sale.id}`}
-                className={`block border bg-white transition-all hover:shadow-md ${
+                className={`block border bg-white transition-all hover:shadow-md active:scale-[0.99] ${
                   selectedSaleId === sale.id
                     ? "border-[#2D3B2D] shadow-md"
                     : "border-[#E5E5E5]"
@@ -284,7 +350,7 @@ function SalesContent() {
               >
                 <div className="flex">
                   {/* Image */}
-                  <div className="relative h-36 w-36 flex-shrink-0 bg-[#E5E5E5] sm:h-44 sm:w-44">
+                  <div className="relative h-32 w-28 flex-shrink-0 bg-[#E5E5E5] sm:h-40 sm:w-40">
                     {sale.photos && sale.photos.length > 0 ? (
                       <img
                         src={sale.photos[0]}
@@ -299,7 +365,7 @@ function SalesContent() {
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="1.5"
-                          className="h-10 w-10"
+                          className="h-8 w-8 sm:h-10 sm:w-10"
                         >
                           <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                           <circle cx="9" cy="9" r="2" />
@@ -315,30 +381,32 @@ function SalesContent() {
                   </div>
 
                   {/* Content */}
-                  <div className="flex flex-1 flex-col p-3 sm:p-4">
-                    <h2 className="font-serif text-base font-bold uppercase tracking-wide text-[#2D3B2D] line-clamp-1 sm:text-lg">
-                      {sale.title}
-                    </h2>
+                  <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
+                    <div>
+                      <h2 className="font-serif text-sm font-bold uppercase tracking-wide text-[#2D3B2D] line-clamp-2 leading-tight sm:text-base sm:line-clamp-1">
+                        {sale.title}
+                      </h2>
 
-                    <div className="mt-2 flex items-center gap-2 text-sm text-[#2D3B2D]">
-                      <CalendarIcon />
-                      <span className="font-medium">
-                        {formatDateRange(sale.start_date, sale.end_date)}
-                      </span>
+                      <div className="mt-2 flex items-center gap-1.5 text-xs text-[#2D3B2D] sm:text-sm sm:gap-2">
+                        <CalendarIcon />
+                        <span className="font-medium">
+                          {formatDateRange(sale.start_date, sale.end_date)}
+                        </span>
+                      </div>
+
+                      {sale.start_time && sale.end_time && (
+                        <p className="mt-0.5 pl-5 text-[10px] text-[#6B7280] sm:pl-6 sm:text-xs">
+                          {formatTime(sale.start_time)} - {formatTime(sale.end_time)} daily
+                        </p>
+                      )}
+
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#6B7280] sm:mt-2 sm:text-sm sm:gap-2">
+                        <MapPinIcon />
+                        <span>{sale.city}, {sale.state}</span>
+                      </div>
                     </div>
 
-                    {sale.start_time && sale.end_time && (
-                      <p className="mt-0.5 pl-6 text-xs text-[#6B7280]">
-                        {formatTime(sale.start_time)} - {formatTime(sale.end_time)} daily
-                      </p>
-                    )}
-
-                    <div className="mt-2 flex items-center gap-2 text-sm text-[#6B7280]">
-                      <MapPinIcon />
-                      <span>{sale.city}, {sale.state}</span>
-                    </div>
-
-                    <div className="mt-auto pt-2 text-xs text-[#6B7280]">
+                    <div className="mt-2 text-[10px] text-[#6B7280] sm:text-xs">
                       <span className="uppercase tracking-wide">Hosted by</span>{" "}
                       <span className="font-medium text-[#2D3B2D]">{sale.company_name}</span>
                     </div>
@@ -350,7 +418,20 @@ function SalesContent() {
           )}
         </div>
 
-        {/* Map */}
+        {/* Mobile Map Toggle Button */}
+        {!showMobileMap && sales.length > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 lg:hidden">
+            <button
+              onClick={() => setShowMobileMap(true)}
+              className="flex items-center gap-2 bg-[#2D3B2D] px-5 py-3 shadow-lg text-sm font-medium text-white rounded-full"
+            >
+              <MapIcon />
+              Map View
+            </button>
+          </div>
+        )}
+
+        {/* Map (Desktop) */}
         <div className="hidden h-[calc(100vh-140px)] w-full flex-shrink-0 lg:block lg:w-[45%] lg:sticky lg:top-0">
           <SalesMap
             sales={sales}
