@@ -1,9 +1,47 @@
 "use client";
 
-import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { MapProvider, defaultMapOptions } from "./Map";
 import Link from "next/link";
+
+function CalendarIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-[#B8A88A]">
+      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+      <line x1="16" x2="16" y1="2" y2="6" />
+      <line x1="8" x2="8" y1="2" y2="6" />
+      <line x1="3" x2="21" y1="10" y2="10" />
+    </svg>
+  );
+}
+
+function MapPinIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-[#B8A88A]">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
+  );
+}
 
 interface Sale {
   id: string;
@@ -194,17 +232,28 @@ function SalesMapInner({
     }
   };
 
+  // Count sales with coords (visible on map)
+  const visibleSalesCount = Object.keys(saleCoords).length;
+
   return (
     <div className="relative w-full h-full">
+      {/* Sales count badge */}
+      {visibleSalesCount > 0 && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white/95 backdrop-blur px-4 py-2 shadow-lg border border-[#E5E5E5] text-sm font-medium text-[#2D3B2D]">
+          {visibleSalesCount} {visibleSalesCount === 1 ? "sale" : "sales"} in view
+        </div>
+      )}
+
       {/* Search this area button */}
       {showSearchAreaButton && (
         <button
           onClick={handleSearchArea}
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white px-4 py-2 shadow-lg border border-[#E5E5E5] text-sm font-medium text-[#2D3B2D] hover:bg-[#FDFBF7] transition-colors"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-10 bg-white px-4 py-2 shadow-lg border border-[#E5E5E5] text-sm font-medium text-[#2D3B2D] hover:bg-[#FDFBF7] transition-colors"
         >
           Search this area
         </button>
       )}
+
       <GoogleMap
         mapContainerClassName="w-full h-full"
         center={defaultCenter}
@@ -219,8 +268,6 @@ function SalesMapInner({
       >
         {sales.map((sale) => {
           const coords = saleCoords[sale.id];
-
-          // Don't render marker until we have coordinates
           if (!coords) return null;
 
           const isSelected = selectedSaleId === sale.id;
@@ -243,55 +290,73 @@ function SalesMapInner({
             />
           );
         })}
+      </GoogleMap>
 
-        {infoWindowSale && saleCoords[infoWindowSale.id] && (
-          <InfoWindow
-            position={saleCoords[infoWindowSale.id]}
-            onCloseClick={() => {
-              setInfoWindowSale(null);
-              onSaleSelect?.(null);
-            }}
-            options={{
-              pixelOffset: new google.maps.Size(0, -30),
-            }}
-          >
-            <Link
-              href={`/sales/${infoWindowSale.id}`}
-              className="block w-[260px] overflow-hidden"
-              style={{ textDecoration: 'none' }}
+      {/* Slide-up card */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 z-20 transform transition-transform duration-300 ease-out ${
+          infoWindowSale ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        {infoWindowSale && (
+          <div className="bg-white border-t border-[#E5E5E5] shadow-[0_-4px_20px_rgba(0,0,0,0.15)] rounded-t-xl">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setInfoWindowSale(null);
+                onSaleSelect?.(null);
+              }}
+              className="absolute top-4 right-4 p-1 text-[#6B7280] hover:text-[#2D3B2D] transition-colors"
             >
+              <XIcon />
+            </button>
+
+            {/* Card content */}
+            <div className="p-4 flex gap-4">
               {/* Thumbnail */}
-              {infoWindowSale.photos && infoWindowSale.photos.length > 0 && (
-                <div className="h-28 w-full">
+              <div className="h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-[#E5E5E5]">
+                {infoWindowSale.photos && infoWindowSale.photos.length > 0 ? (
                   <img
                     src={infoWindowSale.photos[0]}
                     alt={infoWindowSale.title}
                     className="h-full w-full object-cover"
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-[#B8A88A]">
+                    <MapPinIcon />
+                  </div>
+                )}
+              </div>
 
-              <div className="p-3">
-                <h3 className="font-serif text-sm font-bold uppercase tracking-wide text-[#2D3B2D] leading-tight">
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-serif text-lg font-bold text-[#2D3B2D] leading-tight truncate pr-8">
                   {infoWindowSale.title}
                 </h3>
-
-                <p className="mt-2 text-xs font-medium text-[#2D3B2D]">
-                  {formatDateRange(infoWindowSale.start_date, infoWindowSale.end_date)}
-                </p>
-
-                <p className="mt-1 text-xs text-[#6B7280]">
-                  {infoWindowSale.city}, {infoWindowSale.state}
-                </p>
-
-                <p className="mt-2 text-[10px] uppercase tracking-wide text-[#6B7280]">
-                  Hosted by <span className="font-medium text-[#2D3B2D]">{infoWindowSale.company_name}</span>
-                </p>
+                <div className="mt-2 flex items-center gap-2 text-sm text-[#6B7280]">
+                  <CalendarIcon />
+                  <span>{formatDateRange(infoWindowSale.start_date, infoWindowSale.end_date)}</span>
+                </div>
+                <div className="mt-1 flex items-center gap-2 text-sm text-[#6B7280]">
+                  <MapPinIcon />
+                  <span>{infoWindowSale.city}, {infoWindowSale.state}</span>
+                </div>
               </div>
-            </Link>
-          </InfoWindow>
+            </div>
+
+            {/* View Sale button */}
+            <div className="px-4 pb-4">
+              <Link
+                href={`/sales/${infoWindowSale.id}`}
+                className="flex items-center justify-center gap-2 w-full bg-[#2D3B2D] py-3 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              >
+                View Sale
+                <ArrowRightIcon />
+              </Link>
+            </div>
+          </div>
         )}
-      </GoogleMap>
+      </div>
     </div>
   );
 }
