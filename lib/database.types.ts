@@ -17,6 +17,7 @@ export interface Database {
           email: string;
           full_name: string | null;
           user_type: UserType;
+          is_super_admin: boolean;
           created_at: string;
         };
         Insert: {
@@ -24,6 +25,7 @@ export interface Database {
           email: string;
           full_name?: string | null;
           user_type?: UserType;
+          is_super_admin?: boolean;
           created_at?: string;
         };
         Update: {
@@ -31,6 +33,7 @@ export interface Database {
           email?: string;
           full_name?: string | null;
           user_type?: UserType;
+          is_super_admin?: boolean;
           created_at?: string;
         };
       };
