@@ -17,6 +17,8 @@ interface Sale {
   end_date: string;
   lat?: number;
   lng?: number;
+  photos?: string[];
+  is_featured?: boolean;
 }
 
 export interface MapBounds {
@@ -42,15 +44,9 @@ const coordsCache: Record<string, { lat: number; lng: number }> = {};
 function formatDateRange(startDate: string, endDate: string): string {
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const startMonth = start.toLocaleDateString("en-US", { month: "short" });
-  const startDay = start.getDate();
-  const endDay = end.getDate();
-
-  if (start.getMonth() === end.getMonth()) {
-    return `${startMonth} ${startDay}-${endDay}`;
-  }
-  const endMonth = end.toLocaleDateString("en-US", { month: "short" });
-  return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+  const startDay = start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const endDay = end.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  return `${startDay} — ${endDay}`;
 }
 
 function SalesMapInner({
@@ -259,26 +255,40 @@ function SalesMapInner({
               pixelOffset: new google.maps.Size(0, -30),
             }}
           >
-            <div className="max-w-[240px] p-1">
-              <h3 className="font-serif text-sm font-bold text-[#2D3B2D] leading-tight">
-                {infoWindowSale.title}
-              </h3>
-              <p className="mt-1 text-xs text-[#6B7280]">
-                {infoWindowSale.company_name}
-              </p>
-              <p className="mt-1 text-xs text-[#6B7280]">
-                {infoWindowSale.city}, {infoWindowSale.state}
-              </p>
-              <p className="mt-1 text-xs font-medium text-[#2D3B2D]">
-                {formatDateRange(infoWindowSale.start_date, infoWindowSale.end_date)}
-              </p>
-              <Link
-                href={`/sales/${infoWindowSale.id}`}
-                className="mt-2 block text-xs font-medium text-[#2D3B2D] underline hover:opacity-70"
-              >
-                View Details
-              </Link>
-            </div>
+            <Link
+              href={`/sales/${infoWindowSale.id}`}
+              className="block w-[260px] overflow-hidden"
+              style={{ textDecoration: 'none' }}
+            >
+              {/* Thumbnail */}
+              {infoWindowSale.photos && infoWindowSale.photos.length > 0 && (
+                <div className="h-28 w-full">
+                  <img
+                    src={infoWindowSale.photos[0]}
+                    alt={infoWindowSale.title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="p-3">
+                <h3 className="font-serif text-sm font-bold uppercase tracking-wide text-[#2D3B2D] leading-tight">
+                  {infoWindowSale.title}
+                </h3>
+
+                <p className="mt-2 text-xs font-medium text-[#2D3B2D]">
+                  {formatDateRange(infoWindowSale.start_date, infoWindowSale.end_date)}
+                </p>
+
+                <p className="mt-1 text-xs text-[#6B7280]">
+                  {infoWindowSale.city}, {infoWindowSale.state}
+                </p>
+
+                <p className="mt-2 text-[10px] uppercase tracking-wide text-[#6B7280]">
+                  Hosted by <span className="font-medium text-[#2D3B2D]">{infoWindowSale.company_name}</span>
+                </p>
+              </div>
+            </Link>
           </InfoWindow>
         )}
       </GoogleMap>
