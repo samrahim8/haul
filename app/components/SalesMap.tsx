@@ -294,12 +294,12 @@ function SalesMapInner({
 
       {/* Slide-up card */}
       <div
-        className={`absolute bottom-0 left-0 right-0 z-20 transform transition-transform duration-300 ease-out ${
-          infoWindowSale ? "translate-y-0" : "translate-y-full"
+        className={`absolute bottom-4 left-4 right-4 z-20 transform transition-transform duration-300 ease-out ${
+          infoWindowSale ? "translate-y-0" : "translate-y-[calc(100%+16px)]"
         }`}
       >
         {infoWindowSale && (
-          <div className="bg-white border-t border-[#E5E5E5] shadow-[0_-4px_20px_rgba(0,0,0,0.15)] rounded-t-xl">
+          <div className="bg-white border border-[#E5E5E5] shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-xl">
             {/* Close button */}
             <button
               onClick={() => {
